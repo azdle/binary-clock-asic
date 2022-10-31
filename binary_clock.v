@@ -50,10 +50,14 @@ module clock(
   output reg [6:0] miliseconds // 
 );
   
-  overflow_counter #(.bits(5)) h_cnt(.rst(rst), .clk(h_tick), .cmp(5'd24), .cnt(hours), .tick(d_tick));
-  overflow_counter #(.bits(6)) m_cnt(.rst(rst), .clk(m_tick), .cmp(6'd59), .cnt(minutes), .tick(h_tick));
-  overflow_counter #(.bits(6)) s_cnt(.rst(rst), .clk(s_tick), .cmp(6'd59), .cnt(seconds), .tick(m_tick));
-  overflow_counter #(.bits(7)) ms_cnt(.rst(rst), .clk(clk), .cmp(7'd99), .cnt(miliseconds), .tick(s_tick));
+  overflow_counter #(.bits(5))
+    h_cnt(.rst(rst), .clk(h_tick), .cmp(5'd24), .cnt(hours), .tick(d_tick));
+  overflow_counter #(.bits(6))
+    m_cnt(.rst(rst), .clk(m_tick), .cmp(6'd59), .cnt(minutes), .tick(h_tick));
+  overflow_counter #(.bits(6))
+    s_cnt(.rst(rst), .clk(s_tick), .cmp(6'd59), .cnt(seconds), .tick(m_tick));
+  overflow_counter #(.bits(7))
+    ms_cnt(.rst(rst), .clk(clk), .cmp(7'd99), .cnt(miliseconds), .tick(s_tick));
 endmodule
 
 module overflow_counter #(parameter bits = 8) (
