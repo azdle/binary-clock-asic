@@ -11,7 +11,7 @@ async def test_my_design(dut):
 
     dut.RST.value = 1
     await ClockCycles(dut.CLK, 10)
-    dut.RST = 0
+    dut.RST.value = 0
 
     await ClockCycles(dut.CLK, 1)
     assert dut.out.value.integer == 0b0000_0000
