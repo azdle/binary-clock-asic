@@ -14,10 +14,9 @@ module tb (
     end
 
     wire [7:0] inputs = {6'b0, RST, CLK};
-    wire [7:0] outputs;
 
     binary_clock binary_clock (
-        .opins (outputs),
+        .opins (out),
         .rst(RST),
         .clk(CLK)
     );

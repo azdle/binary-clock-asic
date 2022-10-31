@@ -4,7 +4,7 @@ module binary_clock(
   output reg[7:0] opins
 );
   wire state;
-  
+
   wire d_tick; // ticks once per day
   reg [4:0] hours;
   wire h_tick; // ticks once per hour
@@ -13,27 +13,33 @@ module binary_clock(
   reg [5:0] seconds;
   wire s_tick; // ticks once per second
   reg [6:0] miliseconds;
-  
-  reg [7:0] display;
+
+  wire [7:0] display;
   reg [7:0] display0;
   reg [7:0] display1;
   reg [7:0] display2;
-  
+
   reg [1:0] current_display;
-  
+
   clock c(.rst, .clk, .d_tick, .h_tick, .m_tick, .s_tick, .hours, .minutes, .seconds, .miliseconds);
 
   assign opins = rst ? 0 : display;
-  
+
   assign display0 = rst ? 0 : {3'd0, hours};
   assign display1 = rst ? 0 : {2'd0, minutes};
   assign display2 = rst ? 0 : {2'd0, seconds};
-  
+
+  assign display = current_display == 0 ? display0 :
+	           current_display == 1 ? display1 :
+		   current_display == 3 ? display2 :
+		   display0;
+
   always @(posedge clk or negedge clk)
     case(current_display)
-      0: begin current_display <= 1; display <= display1; end
-      1: begin current_display <= 2; display <= display2; end
-      2: begin current_display <= 0; display <= display0; end
+      0: current_display <= 1;
+      1: current_display <= 2;
+      2: current_display <= 0;
+      3: current_display <= 0;
     endcase
 endmodule
 
@@ -47,9 +53,9 @@ module clock(
   output m_tick, // ticks once per minute
   output reg [5:0] seconds,
   output s_tick, // ticks once per second
-  output reg [6:0] miliseconds // 
+  output reg [6:0] miliseconds //
 );
-  
+
   overflow_counter #(.bits(5))
     h_cnt(.rst(rst), .clk(h_tick), .cmp(5'd24), .cnt(hours), .tick(d_tick));
   overflow_counter #(.bits(6))
@@ -67,7 +73,7 @@ module overflow_counter #(parameter bits = 8) (
   output reg [bits-1:0] cnt,
   output reg tick
 );
-  
+
   always @(posedge clk or negedge clk or posedge rst or negedge clk)
     begin
       if (rst)
