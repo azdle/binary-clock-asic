@@ -6,20 +6,20 @@ module binary_clock(
   wire state;
   
   wire d_tick; // ticks once per day
-  wire reg [4:0] hours;
+  reg [4:0] hours;
   wire h_tick; // ticks once per hour
-  wire reg [5:0] minutes;
+  reg [5:0] minutes;
   wire m_tick; // ticks once per minute
-  wire reg [5:0] seconds;
+  reg [5:0] seconds;
   wire s_tick; // ticks once per second
-  wire reg [6:0] miliseconds;
+  reg [6:0] miliseconds;
   
-  wire reg [7:0] display;
-  wire reg [7:0] display0;
-  wire reg [7:0] display1;
-  wire reg [7:0] display2;
+  reg [7:0] display;
+  reg [7:0] display0;
+  reg [7:0] display1;
+  reg [7:0] display2;
   
-  wire reg [1:0] current_display;
+  reg [1:0] current_display;
   
   clock c(.rst, .clk, .d_tick, .h_tick, .m_tick, .s_tick, .hours, .minutes, .seconds, .miliseconds);
 
@@ -29,7 +29,7 @@ module binary_clock(
   assign display1 = rst ? 0 : {2'd0, minutes};
   assign display2 = rst ? 0 : {2'd0, seconds};
   
-  always @(edge clk)
+  always @(posedge clk or negedge clk)
     case(current_display)
       0: begin current_display <= 1; display <= display1; end
       1: begin current_display <= 2; display <= display2; end
@@ -50,21 +50,21 @@ module clock(
   output reg [6:0] miliseconds // 
 );
   
-  overflow_counter #(.bits(5)) h_cnt(.rst(rst), .clk(h_tick), .cmp(24), .cnt(hours), .tick(d_tick));
-  overflow_counter #(.bits(6)) m_cnt(.rst(rst), .clk(m_tick), .cmp(59), .cnt(minutes), .tick(h_tick));
-  overflow_counter #(.bits(6)) s_cnt(.rst(rst), .clk(s_tick), .cmp(59), .cnt(seconds), .tick(m_tick));
-  overflow_counter #(.bits(7)) ms_cnt(.rst(rst), .clk(clk), .cmp(99), .cnt(miliseconds), .tick(s_tick));
+  overflow_counter #(.bits(5)) h_cnt(.rst(rst), .clk(h_tick), .cmp(5'd24), .cnt(hours), .tick(d_tick));
+  overflow_counter #(.bits(6)) m_cnt(.rst(rst), .clk(m_tick), .cmp(6'd59), .cnt(minutes), .tick(h_tick));
+  overflow_counter #(.bits(6)) s_cnt(.rst(rst), .clk(s_tick), .cmp(6'd59), .cnt(seconds), .tick(m_tick));
+  overflow_counter #(.bits(7)) ms_cnt(.rst(rst), .clk(clk), .cmp(7'd99), .cnt(miliseconds), .tick(s_tick));
 endmodule
 
 module overflow_counter #(parameter bits = 8) (
   input rst,
   input clk,
-  input reg [bits-1:0] cmp,
+  input [bits-1:0] cmp,
   output reg [bits-1:0] cnt,
-  output tick
+  output reg tick
 );
   
-  always @(edge clk or edge rst)
+  always @(posedge clk or negedge clk or posedge rst or negedge clk)
     begin
       if (rst)
         begin
