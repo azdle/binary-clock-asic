@@ -97,27 +97,21 @@ module overflow_counter #(parameter bits = 8) (
 
   always @(posedge clk or posedge rst)
     begin
-      if (rst)
-        begin
+      if (rst) begin
         cnt <= 0;
         tick <= 1;
+      end else
+        // wrap to zero instead of reaching cmp
+        if (cnt == cmp-1) begin
+          cnt <= 0;
+          tick <= 1;
         end
-      else
-        begin
-          // wrap to zero instead of reaching cmp
-          if (cnt == cmp-1)
-            begin
-              cnt <= 0;
-              tick <= 1;
-            end
-          else begin
-            cnt <= cnt + 1;
+        else begin
+          cnt <= cnt + 1;
 
-            // unset tick halfway through, odd values for cmp result in
-            // unbalanced tick segments
-            if (cnt == (cmp/2)-1)
-              tick <= 0;
-          end
+          // unset tick halfway through, odd values for cmp result in unbalanced tick segments
+          if (cnt == (cmp/2)-1)
+            tick <= 0;
         end
     end
 endmodule
