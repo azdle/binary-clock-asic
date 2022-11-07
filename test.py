@@ -20,7 +20,7 @@ async def test_my_design(dut):
     await ClockCycles(dut.CLK, 50)
 
     for _ in range(0,10):
-        print("vvv", dut.binary_clock.seconds.value.integer, dut.binary_clock.miliseconds.value.integer)
+        print("vvv", dut.binary_clock.seconds.value.integer, dut.binary_clock.centiseconds.value.integer)
         print(dut.out.value.binstr)
         await ClockCycles(dut.CLK, 48)
         print(dut.out.value.binstr)

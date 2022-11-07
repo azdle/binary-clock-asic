@@ -12,12 +12,12 @@ module binary_clock(
   wire m_tick; // ticks once per minute
   wire [5:0] seconds;
   wire s_tick; // ticks once per second
-  wire [6:0] miliseconds;
+  wire [6:0] centiseconds;
 
   wire [5:0] disp_pins;
 
   clock c(.rst, .clk, .d_tick, .h_tick, .m_tick, .s_tick,
-                               .hours, .minutes, .seconds, .miliseconds);
+                               .hours, .minutes, .seconds, .centiseconds);
   display disp(.rst, .clk, .pins(disp_pins), .pixels({30'b0}));
 
   assign opins = rst ? 0 : {1'b0, 1'b0, disp_pins};
@@ -74,7 +74,7 @@ module clock(
   output m_tick, // ticks once per minute
   output [5:0] seconds,
   output s_tick, // ticks once per second
-  output [6:0] miliseconds
+  output [6:0] centiseconds
 );
 
   overflow_counter #(.bits(5))
@@ -84,7 +84,7 @@ module clock(
   overflow_counter #(.bits(6))
     s_cnt(.rst(rst), .clk(s_tick), .cmp(6'd60), .cnt(seconds), .tick(m_tick));
   overflow_counter #(.bits(7))
-    ms_cnt(.rst(rst), .clk(clk), .cmp(7'd100), .cnt(miliseconds), .tick(s_tick));
+    ms_cnt(.rst(rst), .clk(clk), .cmp(7'd100), .cnt(centiseconds), .tick(s_tick));
 endmodule
 
 module overflow_counter #(parameter bits = 8) (
