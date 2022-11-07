@@ -23,6 +23,14 @@ module binary_clock(
   assign opins = rst ? 0 : {1'b0, 1'b0, disp_pins};
 endmodule
 
+// zero or high-z (maps 1 -> 0, 0 -> Z)
+function zz;
+  input pixel;
+
+  zz = pixel ? 0 : 78'bZ;
+
+endfunction
+
 module display (
   input rst,
   input clk,
@@ -33,18 +41,27 @@ module display (
   wire tick;
   wire [2:0] row;
 
-  assign display = current_display == 0 ? display0 :
-	           current_display == 1 ? display1 :
-		   current_display == 3 ? display2 :
-		   display0;
+  overflow_counter #(.bits(3))
+    row_cycle(.rst(rst), .clk(clk), .cmp(3'd6), .cnt(row), .tick(tick));
 
-  always @(posedge clk or negedge clk)
-    case(current_display)
-      0: current_display <= 1;
-      1: current_display <= 2;
-      2: current_display <= 0;
-      3: current_display <= 0;
-    endcase
+  always @(posedge clk)
+    if (rst)
+      pins <= 0;
+    else
+      case (row)
+        0: pins = { 1'b1, zz(pixels[0][0]), zz(pixels[0][1]),
+                    zz(pixels[0][2]), zz(pixels[0][3]), zz(pixels[0][4]) };
+        1: pins = { zz(pixels[1][0]), 1'b1, zz(pixels[1][1]),
+                    zz(pixels[1][2]), zz(pixels[1][3]), zz(pixels[1][4]) };
+        2: pins = { zz(pixels[2][0]), zz(pixels[2][1]), 1'b1,
+                    zz(pixels[2][2]), zz(pixels[2][3]), zz(pixels[2][4]) };
+        3: pins = { zz(pixels[3][0]), zz(pixels[3][1]), zz(pixels[3][2]),
+                    1'b1, zz(pixels[3][3]), zz(pixels[3][4]) };
+        4: pins = { zz(pixels[4][0]), zz(pixels[4][1]), zz(pixels[4][2]),
+                    zz(pixels[4][3]), 1'b1, zz(pixels[4][4]) };
+        5: pins = { zz(pixels[5][0]), zz(pixels[5][1]), zz(pixels[5][2]),
+                    zz(pixels[5][3]), zz(pixels[5][4]), 1'b1 };
+      endcase
 endmodule
 
 module clock(
