@@ -15,7 +15,7 @@ module tb (
 
     wire [7:0] inputs = {6'b0, RST, CLK};
 
-    binary_clock binary_clock (
+    azdle_binary_clock binary_clock (
         .opins (out),
         .rst(RST),
         .clk(CLK)
