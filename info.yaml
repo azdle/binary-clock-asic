@@ -10,7 +10,13 @@ documentation:
   discord:      "azdle"
   title:        "binary clock"
   description:  "A binary clock using charlieplexed LEDs"
-  how_it_works: ""
+  how_it_works: >
+    Using the internal clock, seconds, minutes are counted in registers with an
+    overflow comparision. An overflow in one, triggers a rising edge on the
+    clock input of the successive register.
+
+    The values of each register are connected to the input to a charlieplexer,
+    which is able to control 30 LEDs using only 6 outputs.
   how_to_test: >
     after reset, the output shows the current time in BCD H:M:S when applied to
     a charlieplexed array of LEDs
