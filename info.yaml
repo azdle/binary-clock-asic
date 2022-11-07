@@ -1,0 +1,40 @@
+---
+project:
+  wokwi_id:    0    # N/A, verilog in repo
+  source_files:
+               - binary_clock.v
+  top_module:  "azdle_binary_clock"
+
+documentation:
+  author:       "Azdle"
+  discord:      "azdle"
+  title:        "binary clock"
+  description:  "A binary clock using charlieplexed LEDs"
+  how_it_works: ""
+  how_to_test: >
+    after reset, the output shows the current time in BCD H:M:S when applied to
+    a charlieplexed array of LEDs
+  external_hw:  ""
+  language:     "verilog"
+  doc_link:     "https://github.com/azdle/binary-clock-asic"
+  clock_hz:     100
+  picture:      "" #TODO
+  inputs:
+    - clock
+    - reset
+    - none
+    - none
+    - none
+    - none
+    - none
+    - none
+  outputs:
+    - plex 0
+    - plex 1
+    - plex 2
+    - plex 3
+    - plex 4
+    - plex 5
+    - none
+    - none
+

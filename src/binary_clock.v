@@ -1,4 +1,4 @@
-module binary_clock(
+module azdle_binary_clock(
   input rst,
   input clk,
   output reg[7:0] opins
