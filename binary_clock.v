@@ -31,7 +31,6 @@ function zz;
   input pixel;
 
   zz = pixel ? 0 : 78'bZ;
-
 endfunction
 
 module display (
@@ -52,18 +51,12 @@ module display (
       pins <= 0;
     else
       case (row)
-        0: pins = { 1'b1, zz(pixels[0][0]), zz(pixels[0][1]),
-                    zz(pixels[0][2]), zz(pixels[0][3]), zz(pixels[0][4]) };
-        1: pins = { zz(pixels[1][0]), 1'b1, zz(pixels[1][1]),
-                    zz(pixels[1][2]), zz(pixels[1][3]), zz(pixels[1][4]) };
-        2: pins = { zz(pixels[2][0]), zz(pixels[2][1]), 1'b1,
-                    zz(pixels[2][2]), zz(pixels[2][3]), zz(pixels[2][4]) };
-        3: pins = { zz(pixels[3][0]), zz(pixels[3][1]), zz(pixels[3][2]),
-                    1'b1, zz(pixels[3][3]), zz(pixels[3][4]) };
-        4: pins = { zz(pixels[4][0]), zz(pixels[4][1]), zz(pixels[4][2]),
-                    zz(pixels[4][3]), 1'b1, zz(pixels[4][4]) };
-        5: pins = { zz(pixels[5][0]), zz(pixels[5][1]), zz(pixels[5][2]),
-                    zz(pixels[5][3]), zz(pixels[5][4]), 1'b1 };
+        0: pins = { zz(pixels[0][4]), zz(pixels[0][3]), zz(pixels[0][2]), zz(pixels[0][1]), zz(pixels[0][0]), 1'b1 };
+        1: pins = { zz(pixels[1][4]), zz(pixels[1][3]), zz(pixels[1][2]), zz(pixels[1][1]), 1'b1, zz(pixels[1][0]) };
+        2: pins = { zz(pixels[2][4]), zz(pixels[2][3]), zz(pixels[2][2]), 1'b1, zz(pixels[2][1]), zz(pixels[2][0]) };
+        3: pins = { zz(pixels[3][4]), zz(pixels[3][3]), 1'b1, zz(pixels[3][2]), zz(pixels[3][1]), zz(pixels[3][0]) };
+        4: pins = { zz(pixels[4][4]), 1'b1, zz(pixels[4][3]), zz(pixels[4][2]), zz(pixels[4][1]), zz(pixels[4][0]) };
+        5: pins = { 1'b1, zz(pixels[5][4]), zz(pixels[5][3]), zz(pixels[5][2]), zz(pixels[5][1]), zz(pixels[5][0]) };
       endcase
 endmodule
 
