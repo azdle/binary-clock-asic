@@ -90,12 +90,12 @@ endmodule
 module overflow_counter #(parameter bits = 8) (
   input rst,
   input clk,
-  input [bits-1:0] cmp,
+  input [bits-1:0] cmp, // even numbers only, rolls over instead of reaching this number
   output reg [bits-1:0] cnt,
   output reg tick
 );
 
-  always @(posedge clk or negedge clk or posedge rst or negedge rst)
+  always @(posedge clk or posedge rst)
     begin
       if (rst)
         begin
@@ -104,19 +104,20 @@ module overflow_counter #(parameter bits = 8) (
         end
       else
         begin
-          // halfway through cycle (possibly on half-clock), reset tick
-          if ({cnt[bits-2:0], ~clk} == cmp)
-            tick <= 0;
-
-          // wrap to zero when we reach cmp
-          if (cnt == cmp)
+          // wrap to zero instead of reaching cmp
+          if (cnt == cmp-1)
             begin
               cnt <= 0;
               tick <= 1;
             end
-          // inc count, full-clock only
-          else if (clk)
+          else begin
             cnt <= cnt + 1;
+
+            // unset tick halfway through, odd values for cmp result in
+            // unbalanced tick segments
+            if (cnt == (cmp/2)-1)
+              tick <= 0;
+          end
         end
     end
 endmodule
