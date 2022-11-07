@@ -95,7 +95,7 @@ module overflow_counter #(parameter bits = 8) (
   output reg tick
 );
 
-  always @(posedge clk or negedge clk or posedge rst or negedge clk)
+  always @(posedge clk or negedge clk or posedge rst or negedge rst)
     begin
       if (rst)
         begin
