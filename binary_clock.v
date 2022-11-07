@@ -14,12 +14,15 @@ module binary_clock(
   wire s_tick; // ticks once per second
   wire [6:0] centiseconds;
 
+  wire [29:0] pixels;
+
   wire [5:0] disp_pins;
 
   clock c(.rst, .clk, .d_tick, .h_tick, .m_tick, .s_tick,
                                .hours, .minutes, .seconds, .centiseconds);
-  display disp(.rst, .clk, .pins(disp_pins), .pixels({30'b0}));
+  display disp(.rst, .clk, .pins(disp_pins), .pixels);
 
+  assign pixels = { 13'b0, hours, minutes, seconds };
   assign opins = rst ? 0 : {1'b0, 1'b0, disp_pins};
 endmodule
 
