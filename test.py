@@ -58,10 +58,7 @@ async def verify_charlieplexing_output(dut):
                 [0,0,0,0,0]]
 
         for _ in range(0,6):
-            # actual row is a clock behind
-            counted_row = dut.binary_clock.disp.row.value.integer
-            row = (counted_row - 1) % 6
-
+            row = dut.binary_clock.disp.row.value.integer
             pins = bit_list(dut.out.value.binstr)
 
             #print("row", row, pins)
