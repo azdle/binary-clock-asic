@@ -6,28 +6,32 @@ module binary_clock(
   wire state;
 
   wire d_tick; // ticks once per day
-  reg [4:0] hours;
+  wire [4:0] hours;
   wire h_tick; // ticks once per hour
-  reg [5:0] minutes;
+  wire [5:0] minutes;
   wire m_tick; // ticks once per minute
-  reg [5:0] seconds;
+  wire [5:0] seconds;
   wire s_tick; // ticks once per second
-  reg [6:0] miliseconds;
+  wire [6:0] miliseconds;
 
-  wire [7:0] display;
-  reg [7:0] display0;
-  reg [7:0] display1;
-  reg [7:0] display2;
+  wire [5:0] disp_pins;
 
-  reg [1:0] current_display;
+  clock c(.rst, .clk, .d_tick, .h_tick, .m_tick, .s_tick,
+                               .hours, .minutes, .seconds, .miliseconds);
+  display disp(.rst, .clk, .pins(disp_pins), .pixels({30'b0}));
 
-  clock c(.rst, .clk, .d_tick, .h_tick, .m_tick, .s_tick, .hours, .minutes, .seconds, .miliseconds);
+  assign opins = rst ? 0 : {1'b0, 1'b0, disp_pins};
+endmodule
 
-  assign opins = rst ? 0 : display;
+module display (
+  input rst,
+  input clk,
+  input [6-1:0][6-2:0] pixels, // [row][column]
+  output reg [6-1:0] pins
+);
 
-  assign display0 = rst ? 0 : {3'd0, hours};
-  assign display1 = rst ? 0 : {2'd0, minutes};
-  assign display2 = rst ? 0 : {2'd0, seconds};
+  wire tick;
+  wire [2:0] row;
 
   assign display = current_display == 0 ? display0 :
 	           current_display == 1 ? display1 :
@@ -47,23 +51,23 @@ module clock(
   input rst,
   input clk,
   output d_tick, // ticks once per day
-  output reg [4:0] hours,
+  output [4:0] hours,
   output h_tick, // ticks once per hour
-  output reg [5:0] minutes,
+  output [5:0] minutes,
   output m_tick, // ticks once per minute
-  output reg [5:0] seconds,
+  output [5:0] seconds,
   output s_tick, // ticks once per second
-  output reg [6:0] miliseconds //
+  output [6:0] miliseconds
 );
 
   overflow_counter #(.bits(5))
     h_cnt(.rst(rst), .clk(h_tick), .cmp(5'd24), .cnt(hours), .tick(d_tick));
   overflow_counter #(.bits(6))
-    m_cnt(.rst(rst), .clk(m_tick), .cmp(6'd59), .cnt(minutes), .tick(h_tick));
+    m_cnt(.rst(rst), .clk(m_tick), .cmp(6'd60), .cnt(minutes), .tick(h_tick));
   overflow_counter #(.bits(6))
-    s_cnt(.rst(rst), .clk(s_tick), .cmp(6'd59), .cnt(seconds), .tick(m_tick));
+    s_cnt(.rst(rst), .clk(s_tick), .cmp(6'd60), .cnt(seconds), .tick(m_tick));
   overflow_counter #(.bits(7))
-    ms_cnt(.rst(rst), .clk(clk), .cmp(7'd99), .cnt(miliseconds), .tick(s_tick));
+    ms_cnt(.rst(rst), .clk(clk), .cmp(7'd100), .cnt(miliseconds), .tick(s_tick));
 endmodule
 
 module overflow_counter #(parameter bits = 8) (
