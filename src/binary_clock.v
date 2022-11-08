@@ -45,7 +45,7 @@ endfunction
 module display (
   input rst,
   input clk,
-  input [3:0][3:0] pixels, // [row][column]
+  input [15:0] pixels, // [row][column]
   output [7:0] pins
 );
 
@@ -65,10 +65,10 @@ module display (
     row == 3 ? { 1'b0, 1'b1, 1'b1, 1'b1 } :
     0;
   assign cols = rst ? 0 :
-    row == 0 ? { p(pixels[0][3]), p(pixels[0][2]), p(pixels[0][1]), p(pixels[0][0]) } :
-    row == 1 ? { p(pixels[1][3]), p(pixels[1][2]), p(pixels[1][1]), p(pixels[1][0]) } :
-    row == 2 ? { p(pixels[2][3]), p(pixels[2][2]), p(pixels[2][1]), p(pixels[2][0]) } :
-    row == 3 ? { p(pixels[3][3]), p(pixels[3][2]), p(pixels[3][1]), p(pixels[3][0]) } :
+    row == 0 ? { p(pixels[0+3]), p(pixels[0+2]), p(pixels[0+1]), p(pixels[0+0]) } :
+    row == 1 ? { p(pixels[4+3]), p(pixels[4+2]), p(pixels[4+1]), p(pixels[4+0]) } :
+    row == 2 ? { p(pixels[8+3]), p(pixels[8+2]), p(pixels[8+1]), p(pixels[8+0]) } :
+    row == 3 ? { p(pixels[12+3]), p(pixels[12+2]), p(pixels[12+1]), p(pixels[12+0]) } :
     0;
 endmodule
 
