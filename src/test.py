@@ -13,6 +13,7 @@ async def reset(reset_wire):
 def bit_list(s):
     bits = list(s)
     bits.reverse()
+    bits = list(map(lambda b: int(b), bits))
     return bits
 
 @cocotb.test()
@@ -31,53 +32,48 @@ async def second_counter_counts_seconds(dut):
         assert dut.binary_clock.seconds.value.integer  == i % 60
 
 @cocotb.test()
-async def verify_charlieplexing_output(dut):
+async def verify_multiplexing_output(dut):
     dut._log.info("start")
 
     clock = Clock(dut.CLK, 10, units="ms")
     cocotb.start_soon(clock.start())
     await reset(dut.RST)
 
-    # check the output for every second of a minute
-    for current_second in range(0, 60 + 1):
-        # wait for second
-        current_second = current_second % 60
+    # check the output for every minute of an hour
+    for current_minute in range(0, 60 + 1):
+        # wait for wanted minute
+        current_minute = current_minute % 60
         while True:
-            await ClockCycles(dut.CLK, 1)
-            if dut.binary_clock.seconds.value.integer == current_second:
+            await ClockCycles(dut.CLK, 100)
+            if dut.binary_clock.minutes.value.integer == current_minute:
                 break
 
         await ClockCycles(dut.CLK, 1)
-        assert dut.binary_clock.seconds.value.integer == current_second
+        assert dut.binary_clock.minutes.value.integer == current_minute
 
-        plex = [[0,0,0,0,0],
-                [0,0,0,0,0],
-                [0,0,0,0,0],
-                [0,0,0,0,0],
-                [0,0,0,0,0],
-                [0,0,0,0,0]]
+        plex = [[0,0,0,0],
+                [0,0,0,0],
+                [0,0,0,0],
+                [0,0,0,0]]
 
-        for _ in range(0,6):
-            row = dut.binary_clock.disp.row.value.integer
+        for _ in range(0,4):
             pins = bit_list(dut.out.value.binstr)
+            col = pins[0:4]
+            row = pins[4:8]
 
-            #print("row", row, pins)
+            #print("pins", pins, col, row)
 
-            diff = 0
+            assert sum(row) == 3
 
-            for pin, state in enumerate(pins):
-                #print(row, pin, state)
-                if pin >= 6:
-                    break
-                elif pin == row:
-                    assert state == '1'
-                    diff = -1
-                else:
-                    plex[row][pin + diff] = 0 if state == 'z' else 1
+            row = row[0] == 0 and 0 or row[1] == 0 and 1 or row[2] == 0 and 2 or row[3] == 0 and 3
+
+            for ci, cv in enumerate(col):
+                #print(ci, cv)
+                plex[row][ci] = cv
 
             await ClockCycles(dut.CLK, 1)
 
-        #print("pat:", ("_" * 13) + ("h" * 5) + ("m" * 6) + ("s" * 6))
+        #print("pat:", ("_" * 5) + ("h" * 5) + ("m" * 6))
         #print("inp:", dut.binary_clock.pixels.value.binstr)
 
         flat_plex = [str(pixel) for row in plex for pixel in row]

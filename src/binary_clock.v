@@ -1,6 +1,8 @@
 module azdle_binary_clock(
   input rst,
   input clk,
+  // TODO: input pps, // Pulse per second input
+  // TODO: input [4:0] start_hours, // value for hours to load when coming out of reset
   output reg[7:0] opins
 );
   wire state;
@@ -14,45 +16,59 @@ module azdle_binary_clock(
   wire s_tick; // ticks once per second
   wire [6:0] centiseconds;
 
-  wire [29:0] pixels;
+  wire [15:0] pixels;
 
-  wire [5:0] disp_pins;
+  wire [7:0] disp_pins;
 
   clock c(.rst, .clk, .d_tick, .h_tick, .m_tick, .s_tick,
                                .hours, .minutes, .seconds, .centiseconds);
   display disp(.rst, .clk, .pins(disp_pins), .pixels);
 
-  assign pixels = { 13'b0, hours, minutes, seconds };
-  assign opins = rst ? 0 : {1'b0, 1'b0, disp_pins};
+  assign pixels = { 5'b0, hours, minutes };
+  assign opins = rst ? 0 : {disp_pins};
 endmodule
 
-// zero or high-z (maps 1 -> 0, 0 -> Z)
-function zz;
+// pass (convenience to match `i` (invert))
+function p;
   input pixel;
 
-  zz = pixel ? 0 : 78'bZ;
+  p = pixel;
+endfunction
+
+// invert
+function i;
+  input pixel;
+
+  i = ~pixel;
 endfunction
 
 module display (
   input rst,
   input clk,
-  input [6-1:0][6-2:0] pixels, // [row][column]
-  output reg [6-1:0] pins
+  input [3:0][3:0] pixels, // [row][column]
+  output [7:0] pins
 );
 
-  wire tick;
-  wire [2:0] row;
+  wire [1:0] row;
+  wire [1:0] col;
+  wire [3:0] rows;
+  wire [3:0] cols;
 
-  overflow_counter #(.bits(3))
-    row_cycle(.rst(rst), .clk(clk), .cmp(3'd6), .cnt(row), .tick(tick));
+  counter #(.bits(2)) state_cycle(.rst(rst), .clk(clk), .cnt(row));
 
-  assign pins = rst ? 0 :
-    row == 0 ? { zz(pixels[0][4]), zz(pixels[0][3]), zz(pixels[0][2]), zz(pixels[0][1]), zz(pixels[0][0]), 1'b1 } :
-    row == 1 ? { zz(pixels[1][4]), zz(pixels[1][3]), zz(pixels[1][2]), zz(pixels[1][1]), 1'b1, zz(pixels[1][0]) } :
-    row == 2 ? { zz(pixels[2][4]), zz(pixels[2][3]), zz(pixels[2][2]), 1'b1, zz(pixels[2][1]), zz(pixels[2][0]) } :
-    row == 3 ? { zz(pixels[3][4]), zz(pixels[3][3]), 1'b1, zz(pixels[3][2]), zz(pixels[3][1]), zz(pixels[3][0]) } :
-    row == 4 ? { zz(pixels[4][4]), 1'b1, zz(pixels[4][3]), zz(pixels[4][2]), zz(pixels[4][1]), zz(pixels[4][0]) } :
-    row == 5 ? { 1'b1, zz(pixels[5][4]), zz(pixels[5][3]), zz(pixels[5][2]), zz(pixels[5][1]), zz(pixels[5][0]) } :
+  assign pins = { rows, cols };
+
+  assign rows = rst ? 0 :
+    row == 0 ? { 1'b1, 1'b1, 1'b1, 1'b0 } :
+    row == 1 ? { 1'b1, 1'b1, 1'b0, 1'b1 } :
+    row == 2 ? { 1'b1, 1'b0, 1'b1, 1'b1 } :
+    row == 3 ? { 1'b0, 1'b1, 1'b1, 1'b1 } :
+    0;
+  assign cols = rst ? 0 :
+    row == 0 ? { p(pixels[0][3]), p(pixels[0][2]), p(pixels[0][1]), p(pixels[0][0]) } :
+    row == 1 ? { p(pixels[1][3]), p(pixels[1][2]), p(pixels[1][1]), p(pixels[1][0]) } :
+    row == 2 ? { p(pixels[2][3]), p(pixels[2][2]), p(pixels[2][1]), p(pixels[2][0]) } :
+    row == 3 ? { p(pixels[3][3]), p(pixels[3][2]), p(pixels[3][1]), p(pixels[3][0]) } :
     0;
 endmodule
 
@@ -77,6 +93,19 @@ module clock(
     s_cnt(.rst(rst), .clk(s_tick), .cmp(6'd60), .cnt(seconds), .tick(m_tick));
   overflow_counter #(.bits(7))
     ms_cnt(.rst(rst), .clk(clk), .cmp(7'd100), .cnt(centiseconds), .tick(s_tick));
+endmodule
+
+module counter #(parameter bits = 8) (
+  input rst,
+  input clk,
+  output reg [bits-1:0] cnt
+);
+
+  always @(posedge clk or posedge rst)
+    if (rst)
+      cnt <= 0;
+    else
+      cnt <= cnt + 1;
 endmodule
 
 module overflow_counter #(parameter bits = 8) (

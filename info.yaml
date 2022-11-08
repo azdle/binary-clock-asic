@@ -9,17 +9,17 @@ documentation:
   author:       "Azdle"
   discord:      "azdle"
   title:        "binary clock"
-  description:  "A binary clock using charlieplexed LEDs"
+  description:  "A binary clock using multiplexed LEDs"
   how_it_works: >
-    Using the internal clock, seconds, minutes are counted in registers with an
+    Using the internal clock, minutes and hours are counted in registers with an
     overflow comparision. An overflow in one, triggers a rising edge on the
     clock input of the successive register.
 
-    The values of each register are connected to the input to a charlieplexer,
-    which is able to control 30 LEDs using only 6 outputs.
+    The values of each register are connected to the input to a multiplexer,
+    which is able to control 16 LEDs using just the 8 outputs.
   how_to_test: >
-    after reset, the output shows the current time in BCD H:M:S when applied to
-    a charlieplexed array of LEDs
+    after reset, the output shows the current time in BCD H:M when applied to
+    a multiplexed array of LEDs
   external_hw:  ""
   language:     "verilog"
   doc_link:     "https://github.com/azdle/binary-clock-asic"
@@ -35,12 +35,12 @@ documentation:
     - none
     - none
   outputs:
-    - plex 0
-    - plex 1
-    - plex 2
-    - plex 3
-    - plex 4
-    - plex 5
-    - none
-    - none
+    - col 0
+    - col 1
+    - col 2
+    - col 3
+    - row 0
+    - row 2
+    - row 3
+    - row 4
 
