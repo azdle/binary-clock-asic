@@ -13,12 +13,11 @@ module tb (
         #1;
     end
 
-    wire [7:0] inputs = {6'b0, RST, CLK};
+    wire [7:0] in = {6'b0, CLK, RST};
 
     azdle_binary_clock binary_clock (
-        .opins (out),
-        .rst(RST),
-        .clk(CLK)
+        .io_out(out),
+	.io_in(in)
     );
 
 endmodule

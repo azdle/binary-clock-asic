@@ -1,10 +1,17 @@
 module azdle_binary_clock(
-  input rst,
-  input clk,
+  input [7:0] io_in,
+  output [7:0] io_out
+);
+  wire rst;
+  wire clk;
   // TODO: input pps, // Pulse per second input
   // TODO: input [4:0] start_hours, // value for hours to load when coming out of reset
-  output reg[7:0] opins
-);
+  wire [7:0] opins;
+
+  assign rst = io_in[0];
+  assign clk = io_in[1];
+  assign io_out = opins;
+
   wire state;
 
   wire d_tick; // ticks once per day
