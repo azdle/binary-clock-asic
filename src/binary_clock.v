@@ -100,14 +100,11 @@ module clock(
   reg pps_latch;
   wire sec_source;
 
-  always @ (posedge rst or posedge pps)
-    if(rst)
+  always @ (posedge rst or posedge pps or posedge clk)
+    if(rst && pps == 0)
       pps_latch <= 0;
-    else if(pps)
+    else if(pps_latch == 0 && pps == 1)
       pps_latch <= 1;
-
-  always @(negedge rst)
-    pps_latch <= pps;
 
   assign sec_source = pps_latch ? pps : s_roll;
 
