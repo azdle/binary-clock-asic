@@ -144,26 +144,27 @@ module overflow_counter #(parameter bits = 8) (
   output reg roll            // the output tick on overflow
 );
 
-  always @(posedge clk)
-      if (rst) begin
-        cnt <= init;
-        roll <= 1;
-      end
+  reg newtick; // tick is much less frequent than clk, only do things (other than reset) once for each tick
 
-  always @(posedge tick)
+  always @(posedge clk or negedge clk)
     if (rst) begin
       cnt <= init;
       roll <= 1;
-    // wrap to zero instead of reaching cmp
-    end else if(cnt == cmp-1) begin
-      cnt <= 0;
-      roll <= 1;
-    end
-    else begin
-      cnt <= cnt + 1;
+    end else if (tick == 0) begin
+      newtick = 1;
+    end else if (tick && newtick) begin
+      newtick <= 0;
+      // wrap to zero instead of reaching cmp
+      if(cnt == cmp-1) begin
+        cnt <= 0;
+        roll <= 1;
+      end
+      else begin
+        cnt <= cnt + 1;
 
-      // unset roll halfway through, odd values for cmp result in unbalanced roll segments
-      if (cnt == (cmp/2)-1)
-        roll <= 0;
+        // unset roll halfway through, odd values for cmp result in unbalanced roll segments
+        if (cnt == (cmp/2)-1)
+          roll <= 0;
+      end
     end
 endmodule
