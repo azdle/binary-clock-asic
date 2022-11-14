@@ -28,12 +28,12 @@ documentation:
   inputs:
     - clock
     - reset
-    - none
-    - none
-    - none
-    - none
-    - none
-    - none
+    - pps
+    - hours_b16
+    - hours_b8
+    - hours_b4
+    - hours_b2
+    - hours_b1
   outputs:
     - col 0
     - col 1

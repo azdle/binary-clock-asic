@@ -20,6 +20,9 @@ def bit_list(s):
 async def second_counter_counts_seconds(dut):
     dut._log.info("start")
 
+    dut.PPS.value = 0;
+    dut.HOURS_INIT.value = 0;
+
     clock = Clock(dut.CLK, 10, units="ms")
     cocotb.start_soon(clock.start())
     await reset(dut.RST)
@@ -34,6 +37,9 @@ async def second_counter_counts_seconds(dut):
 @cocotb.test()
 async def verify_multiplexing_output(dut):
     dut._log.info("start")
+
+    dut.PPS.value = 0;
+    dut.HOURS_INIT.value = 0;
 
     clock = Clock(dut.CLK, 10, units="ms")
     cocotb.start_soon(clock.start())

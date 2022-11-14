@@ -4,6 +4,8 @@
 module tb (
   input CLK,
   input RST,
+  input PPS,
+  input [3:7] HOURS_INIT,
   output [7:0] out
 );
 
@@ -13,7 +15,7 @@ module tb (
         #1;
     end
 
-    wire [7:0] in = {6'b0, CLK, RST};
+    wire [7:0] in = {HOURS_INIT, PPS, CLK, RST};
 
     azdle_binary_clock binary_clock (
         .io_out(out),
