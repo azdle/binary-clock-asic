@@ -4,12 +4,13 @@ module azdle_binary_clock(
 );
   wire rst;
   wire clk;
-  // TODO: input pps, // Pulse per second input
+  wire pps; // Pulse per second input
   // TODO: input [4:0] start_hours, // value for hours to load when coming out of reset
   wire [7:0] opins;
 
   assign rst = io_in[0];
   assign clk = io_in[1];
+  assign pps = io_in[2];
   assign io_out = opins;
 
   wire state;
@@ -27,8 +28,9 @@ module azdle_binary_clock(
 
   wire [7:0] disp_pins;
 
-  clock c(.rst, .clk, .d_tick, .h_tick, .m_tick, .s_tick,
-                               .hours, .minutes, .seconds, .centiseconds);
+  clock c(.rst, .clk, .pps,
+	  .d_tick, .h_tick, .m_tick, .s_tick,
+                   .hours, .minutes, .seconds, .centiseconds);
   display disp(.rst, .clk, .pins(disp_pins), .pixels);
 
   assign pixels = { 5'b0, hours, minutes };
@@ -82,6 +84,7 @@ endmodule
 module clock(
   input rst,
   input clk,
+  input pps,
   output d_tick, // ticks once per day
   output [4:0] hours,
   output h_tick, // ticks once per hour
@@ -92,12 +95,23 @@ module clock(
   output [6:0] centiseconds
 );
 
+  reg pps_latch;
+  wire sec_source;
+
+  always @ (posedge rst or posedge pps)
+    if(rst)
+      pps_latch <= 0;
+    else if(pps)
+      pps_latch <= 1;
+
+  assign sec_source = pps_latch ? pps : s_tick;
+
   overflow_counter #(.bits(5))
     h_cnt(.rst(rst), .clk(h_tick), .cmp(5'd24), .cnt(hours), .tick(d_tick));
   overflow_counter #(.bits(6))
     m_cnt(.rst(rst), .clk(m_tick), .cmp(6'd60), .cnt(minutes), .tick(h_tick));
   overflow_counter #(.bits(6))
-    s_cnt(.rst(rst), .clk(s_tick), .cmp(6'd60), .cnt(seconds), .tick(m_tick));
+    s_cnt(.rst(rst), .clk(sec_source), .cmp(6'd60), .cnt(seconds), .tick(m_tick));
   overflow_counter #(.bits(7))
     ms_cnt(.rst(rst), .clk(clk), .cmp(7'd100), .cnt(centiseconds), .tick(s_tick));
 endmodule
