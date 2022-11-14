@@ -164,7 +164,7 @@ module overflow_counter #(parameter bits = 8) (
 
   reg newtick; // tick is much less frequent than clk, only do things (other than reset) once for each tick
 
-  always @(posedge clk)
+  always @(posedge clk or posedge tick)
     if (rst) begin
       cnt <= init;
       roll <= 1;
