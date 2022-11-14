@@ -151,7 +151,7 @@ module overflow_counter #(parameter bits = 8) (
       cnt <= init;
       roll <= 1;
     end else if (tick == 0) begin
-      newtick = 1;
+      newtick <= 1;
     end else if (tick && newtick) begin
       newtick <= 0;
       // wrap to zero instead of reaching cmp
