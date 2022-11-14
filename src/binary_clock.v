@@ -5,7 +5,7 @@ module azdle_binary_clock(
   wire rst;
   wire clk;
   wire pps; // Pulse per second input
-  input [4:0] hours_init; // value for hours to load when coming out of reset
+  wire [4:0] hours_init; // value for hours to load when coming out of reset
   wire [7:0] opins;
 
   assign rst = io_in[0];
