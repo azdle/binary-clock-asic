@@ -107,6 +107,13 @@ module clock(
     else if(pps_latch == 0 && pps)
       pps_latch <= 1;
 
+  always @*
+    if (~rst)
+      pps_latch = pps;
+    else if (pps)
+      pps_latch = 1;
+
+
   assign sec_source = pps_latch ? pps : s_roll;
 
   overflow_counter #(.bits(5))
