@@ -101,7 +101,7 @@ module clock(
   wire sec_source;
   wire hclk;
 
-  always @ (posedge rst or posedge pps or posedge clk)
+  always @ (posedge clk)
     if(rst && pps == 0)
       pps_latch <= 0;
     else if(pps_latch == 0 && pps)
@@ -138,7 +138,7 @@ module counter #(parameter bits = 8) (
   output reg [bits-1:0] cnt
 );
 
-  always @(posedge clk or posedge rst)
+  always @(posedge clk)
     if (rst)
       cnt <= 0;
     else
