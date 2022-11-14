@@ -3,11 +3,11 @@ from cocotb.clock import Clock
 from cocotb.triggers import RisingEdge, FallingEdge, Timer, ClockCycles
 
 # Asserts the reset pin for 1 millisecond, not taking any clocks
-async def reset(reset_wire):
-    reset_wire.value = 1
-    await Timer(1, units="ms")
-    reset_wire.value = 0
-    reset_wire._log.debug("Reset complete")
+async def reset(dut):
+    dut.RST.value = 1
+    await ClockCycles(dut.CLK, 1)
+    dut.RST.value = 0
+    dut._log.debug("Reset complete")
 
 # Create an indexable list of bits from a binstr
 def bit_list(s):
@@ -25,7 +25,7 @@ async def second_counter_counts_seconds(dut):
 
     clock = Clock(dut.CLK, 10, units="ms")
     cocotb.start_soon(clock.start())
-    await reset(dut.RST)
+    await reset(dut)
 
     # TODO: increase range, was 1001
     for i in range(0,100):
@@ -43,7 +43,7 @@ async def verify_multiplexing_output(dut):
 
     clock = Clock(dut.CLK, 10, units="ms")
     cocotb.start_soon(clock.start())
-    await reset(dut.RST)
+    await reset(dut)
 
     #print(dut.binary_clock.hours_init.value.binstr)
     #print(dut.binary_clock.seconds.value.binstr)
@@ -94,39 +94,39 @@ async def verify_multiplexing_output(dut):
         assert str_plex == dut.binary_clock.pixels.value.binstr
 
 @cocotb.test()
-async def rising_edge_on_pps_takes_over_seconds(dut):
+async def high_pps_takes_over_seconds(dut):
     dut._log.info("start")
 
     dut.PPS.value = 0;
     dut.HOURS_INIT.value = 0;
 
-
     clock = Clock(dut.CLK, 10, units="ms")
     cocotb.start_soon(clock.start())
-    await reset(dut.RST)
+    await reset(dut)
 
+    # pull PPS high
     pps = dut.binary_clock.pps
     pps.value = 1
 
-    # TODO: increase range, was 1001
+    # manually force and another reset while PPS is high
+    dut.RST.value = 1
+    await ClockCycles(dut.CLK, 2)
+    dut.RST.value = 0
+    await ClockCycles(dut.CLK, 2)
+
     for i in range(0,1000):
-        await ClockCycles(dut.CLK, 1)
-        assert dut.binary_clock.seconds.value.integer  == 0
-        await ClockCycles(dut.CLK, 99)
-        assert dut.binary_clock.seconds.value.integer  == 0
+        #print("loop sec", i, dut.binary_clock.seconds.value.integer)
+        await ClockCycles(dut.CLK, 100)
+        assert dut.binary_clock.seconds.value.integer == 0
 
-
-    pps.value = 0
-    await ClockCycles(dut.CLK, 1)
-
-    for i in range(1,1000):
-        pps.value = 1
+    for i in range(0,1000):
         await ClockCycles(dut.CLK, 3) # off of clock ms
-        #print(i, dut.binary_clock.seconds.value.integer)
         assert dut.binary_clock.seconds.value.integer == i % 60
         pps.value = 0
         await ClockCycles(dut.CLK, 3) # off of clock ms
+        #print(i, dut.binary_clock.seconds.value.integer)
         assert dut.binary_clock.seconds.value.integer == i % 60
+        pps.value = 1
 
 
 @cocotb.test()
@@ -136,14 +136,15 @@ async def hours_initable(dut):
     dut.PPS.value = 0;
     dut.HOURS_INIT.value = 0;
 
-
     clock = Clock(dut.CLK, 10, units="ms")
     cocotb.start_soon(clock.start())
-    await reset(dut.RST)
+    await reset(dut)
 
     hours = dut.binary_clock.hours
     hours_init = dut.binary_clock.hours_init
     rst = dut.binary_clock.rst
+
+    #print(hours.value, hours_init.value, rst.value)
 
     # test each hour
     for i in range(0,24):
@@ -155,5 +156,6 @@ async def hours_initable(dut):
         rst.value = 0
         await ClockCycles(dut.CLK, 1)
 
+        #print(i, hours.value)
         assert hours.value == i
         await ClockCycles(dut.CLK, 1)

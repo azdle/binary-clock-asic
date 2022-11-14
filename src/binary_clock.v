@@ -5,7 +5,7 @@ module azdle_binary_clock(
   wire rst;
   wire clk;
   wire pps; // Pulse per second input
-  reg [4:0] hours_init; // value for hours to load when coming out of reset
+  wire [4:0] hours_init; // value for hours to load when coming out of reset
   wire [7:0] opins;
 
   assign rst = io_in[0];
@@ -16,13 +16,13 @@ module azdle_binary_clock(
 
   wire state;
 
-  wire d_tick; // ticks once per day
+  wire d_roll; // rolls once per day
   wire [4:0] hours;
-  wire h_tick; // ticks once per hour
+  wire h_roll; // rolls once per hour
   wire [5:0] minutes;
-  wire m_tick; // ticks once per minute
+  wire m_roll; // rolls once per minute
   wire [5:0] seconds;
-  wire s_tick; // ticks once per second
+  wire s_roll; // rolls once per second
   wire [6:0] centiseconds;
 
   wire [15:0] pixels;
@@ -30,7 +30,7 @@ module azdle_binary_clock(
   wire [7:0] disp_pins;
 
   clock c(.rst, .clk, .pps, .hours_init,
-	  .d_tick, .h_tick, .m_tick, .s_tick,
+	  .d_roll, .h_roll, .m_roll, .s_roll,
                    .hours, .minutes, .seconds, .centiseconds);
   display disp(.rst, .clk, .pins(disp_pins), .pixels);
 
@@ -87,13 +87,13 @@ module clock(
   input clk,
   input pps,
   input [4:0] hours_init,
-  output d_tick, // ticks once per day
+  output d_roll, // rolls once per day
   output [4:0] hours,
-  output h_tick, // ticks once per hour
+  output h_roll, // rolls once per hour
   output [5:0] minutes,
-  output m_tick, // ticks once per minute
+  output m_roll, // rolls once per minute
   output [5:0] seconds,
-  output s_tick, // ticks once per second
+  output s_roll, // rolls once per second
   output [6:0] centiseconds
 );
 
@@ -106,16 +106,19 @@ module clock(
     else if(pps)
       pps_latch <= 1;
 
-  assign sec_source = pps_latch ? pps : s_tick;
+  always @(negedge rst)
+    pps_latch <= pps;
+
+  assign sec_source = pps_latch ? pps : s_roll;
 
   overflow_counter #(.bits(5))
-    h_cnt(.rst(rst), .clk(h_tick), .cmp(5'd24), .cnt(hours), .tick(d_tick), .init(hours_init));
+    h_cnt(.rst(rst), .clk, .tick(h_roll), .cmp(5'd24), .cnt(hours), .roll(d_roll), .init(hours_init));
   overflow_counter #(.bits(6))
-    m_cnt(.rst(rst), .clk(m_tick), .cmp(6'd60), .cnt(minutes), .tick(h_tick), .init(0));
+    m_cnt(.rst(rst), .clk, .tick(m_roll), .cmp(6'd60), .cnt(minutes), .roll(h_roll), .init(6'b0));
   overflow_counter #(.bits(6))
-    s_cnt(.rst(rst), .clk(sec_source), .cmp(6'd60), .cnt(seconds), .tick(m_tick), .init(0));
+    s_cnt(.rst(rst), .clk, .tick(sec_source), .cmp(6'd60), .cnt(seconds), .roll(m_roll), .init(6'b0));
   overflow_counter #(.bits(7))
-    ms_cnt(.rst(rst), .clk(clk), .cmp(7'd100), .cnt(centiseconds), .tick(s_tick), .init(0));
+    ms_cnt(.rst(rst), .clk, .tick(clk), .cmp(7'd100), .cnt(centiseconds), .roll(s_roll), .init(7'b0));
 endmodule
 
 module counter #(parameter bits = 8) (
@@ -132,31 +135,35 @@ module counter #(parameter bits = 8) (
 endmodule
 
 module overflow_counter #(parameter bits = 8) (
-  input rst,
-  input clk,
-  input [bits-1:0] init, // value to start at coming out of reset, still wraps to 0
-  input [bits-1:0] cmp, // even numbers only, rolls over instead of reaching this number
-  output reg [bits-1:0] cnt,
-  output reg tick
+  input rst,                 // reset
+  input clk,                 // the raw system clock, for rst only
+  input tick,                // the counted input tick
+  input [bits-1:0] init,     // value to start at coming out of reset, still wraps to 0
+  input [bits-1:0] cmp,      // even numbers only, rolls over instead of reaching this number
+  output reg [bits-1:0] cnt, // the value of the counter
+  output reg roll            // the output tick on overflow
 );
 
-  always @(posedge clk or posedge rst)
-    begin
+  always @(posedge clk)
       if (rst) begin
         cnt <= init;
-        tick <= 1;
-      end else
-        // wrap to zero instead of reaching cmp
-        if (cnt == cmp-1) begin
-          cnt <= 0;
-          tick <= 1;
-        end
-        else begin
-          cnt <= cnt + 1;
+        roll <= 1;
+      end
 
-          // unset tick halfway through, odd values for cmp result in unbalanced tick segments
-          if (cnt == (cmp/2)-1)
-            tick <= 0;
-        end
+  always @(posedge tick)
+    if (rst) begin
+      cnt <= init;
+      roll <= 1;
+    // wrap to zero instead of reaching cmp
+    end else if(cnt == cmp-1) begin
+      cnt <= 0;
+      roll <= 1;
+    end
+    else begin
+      cnt <= cnt + 1;
+
+      // unset roll halfway through, odd values for cmp result in unbalanced roll segments
+      if (cnt == (cmp/2)-1)
+        roll <= 0;
     end
 endmodule
