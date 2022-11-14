@@ -5,12 +5,13 @@ module azdle_binary_clock(
   wire rst;
   wire clk;
   wire pps; // Pulse per second input
-  // TODO: input [4:0] start_hours, // value for hours to load when coming out of reset
+  input [4:0] hours_init; // value for hours to load when coming out of reset
   wire [7:0] opins;
 
   assign rst = io_in[0];
   assign clk = io_in[1];
   assign pps = io_in[2];
+  assign hours_init = io_in[7:3];
   assign io_out = opins;
 
   wire state;
@@ -28,7 +29,7 @@ module azdle_binary_clock(
 
   wire [7:0] disp_pins;
 
-  clock c(.rst, .clk, .pps,
+  clock c(.rst, .clk, .pps, .hours_init,
 	  .d_tick, .h_tick, .m_tick, .s_tick,
                    .hours, .minutes, .seconds, .centiseconds);
   display disp(.rst, .clk, .pins(disp_pins), .pixels);
@@ -85,6 +86,7 @@ module clock(
   input rst,
   input clk,
   input pps,
+  input hours_init,
   output d_tick, // ticks once per day
   output [4:0] hours,
   output h_tick, // ticks once per hour
@@ -107,13 +109,13 @@ module clock(
   assign sec_source = pps_latch ? pps : s_tick;
 
   overflow_counter #(.bits(5))
-    h_cnt(.rst(rst), .clk(h_tick), .cmp(5'd24), .cnt(hours), .tick(d_tick));
+    h_cnt(.rst(rst), .clk(h_tick), .cmp(5'd24), .cnt(hours), .tick(d_tick), .init(hours_init));
   overflow_counter #(.bits(6))
-    m_cnt(.rst(rst), .clk(m_tick), .cmp(6'd60), .cnt(minutes), .tick(h_tick));
+    m_cnt(.rst(rst), .clk(m_tick), .cmp(6'd60), .cnt(minutes), .tick(h_tick), .init(0));
   overflow_counter #(.bits(6))
-    s_cnt(.rst(rst), .clk(sec_source), .cmp(6'd60), .cnt(seconds), .tick(m_tick));
+    s_cnt(.rst(rst), .clk(sec_source), .cmp(6'd60), .cnt(seconds), .tick(m_tick), .init(0));
   overflow_counter #(.bits(7))
-    ms_cnt(.rst(rst), .clk(clk), .cmp(7'd100), .cnt(centiseconds), .tick(s_tick));
+    ms_cnt(.rst(rst), .clk(clk), .cmp(7'd100), .cnt(centiseconds), .tick(s_tick), .init(0));
 endmodule
 
 module counter #(parameter bits = 8) (
@@ -132,6 +134,7 @@ endmodule
 module overflow_counter #(parameter bits = 8) (
   input rst,
   input clk,
+  input [bits-1:0] init, // value to start at coming out of reset, still wraps to 0
   input [bits-1:0] cmp, // even numbers only, rolls over instead of reaching this number
   output reg [bits-1:0] cnt,
   output reg tick
@@ -140,7 +143,7 @@ module overflow_counter #(parameter bits = 8) (
   always @(posedge clk or posedge rst)
     begin
       if (rst) begin
-        cnt <= 0;
+        cnt <= init;
         tick <= 1;
       end else
         // wrap to zero instead of reaching cmp

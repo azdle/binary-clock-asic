@@ -39,6 +39,9 @@ async def verify_multiplexing_output(dut):
     cocotb.start_soon(clock.start())
     await reset(dut.RST)
 
+    print(dut.binary_clock.hours_init.value.binstr)
+    print(dut.binary_clock.seconds.value.binstr)
+
     # check the output for every minute of an hour
     for current_minute in range(0, 60 + 1):
         # wait for wanted minute
