@@ -104,7 +104,7 @@ module clock(
   always @ (posedge rst or posedge pps or posedge clk)
     if(rst && pps == 0)
       pps_latch <= 0;
-    else if(pps_latch == 0 && pps == 1)
+    else if(pps_latch == 0 && pps)
       pps_latch <= 1;
 
   assign sec_source = pps_latch ? pps : s_roll;
@@ -126,7 +126,7 @@ module halfclock (
 );
 
   always @(posedge clk)
-    if (hclk == 1)
+    if (hclk)
       hclk <= 0;
     else
       hclk <= 1;
@@ -157,7 +157,7 @@ module overflow_counter #(parameter bits = 8) (
 
   reg newtick; // tick is much less frequent than clk, only do things (other than reset) once for each tick
 
-  always @(posedge clk or posedge tick)
+  always @(posedge clk)
     if (rst) begin
       cnt <= init;
       roll <= 1;
