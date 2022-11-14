@@ -86,7 +86,7 @@ module clock(
   input rst,
   input clk,
   input pps,
-  input hours_init,
+  input [4:0] hours_init,
   output d_tick, // ticks once per day
   output [4:0] hours,
   output h_tick, // ticks once per hour
