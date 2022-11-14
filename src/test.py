@@ -45,8 +45,8 @@ async def verify_multiplexing_output(dut):
     cocotb.start_soon(clock.start())
     await reset(dut.RST)
 
-    print(dut.binary_clock.hours_init.value.binstr)
-    print(dut.binary_clock.seconds.value.binstr)
+    #print(dut.binary_clock.hours_init.value.binstr)
+    #print(dut.binary_clock.seconds.value.binstr)
 
     # check the output for every minute of an hour
     for current_minute in range(0, 60 + 1):
@@ -92,3 +92,68 @@ async def verify_multiplexing_output(dut):
         #print("out:", str_plex)
 
         assert str_plex == dut.binary_clock.pixels.value.binstr
+
+@cocotb.test()
+async def rising_edge_on_pps_takes_over_seconds(dut):
+    dut._log.info("start")
+
+    dut.PPS.value = 0;
+    dut.HOURS_INIT.value = 0;
+
+
+    clock = Clock(dut.CLK, 10, units="ms")
+    cocotb.start_soon(clock.start())
+    await reset(dut.RST)
+
+    pps = dut.binary_clock.pps
+    pps.value = 1
+
+    # TODO: increase range, was 1001
+    for i in range(0,1000):
+        await ClockCycles(dut.CLK, 1)
+        assert dut.binary_clock.seconds.value.integer  == 0
+        await ClockCycles(dut.CLK, 99)
+        assert dut.binary_clock.seconds.value.integer  == 0
+
+
+    pps.value = 0
+    await ClockCycles(dut.CLK, 1)
+
+    for i in range(1,1000):
+        pps.value = 1
+        await ClockCycles(dut.CLK, 3) # off of clock ms
+        #print(i, dut.binary_clock.seconds.value.integer)
+        assert dut.binary_clock.seconds.value.integer == i % 60
+        pps.value = 0
+        await ClockCycles(dut.CLK, 3) # off of clock ms
+        assert dut.binary_clock.seconds.value.integer == i % 60
+
+
+@cocotb.test()
+async def hours_initable(dut):
+    dut._log.info("start")
+
+    dut.PPS.value = 0;
+    dut.HOURS_INIT.value = 0;
+
+
+    clock = Clock(dut.CLK, 10, units="ms")
+    cocotb.start_soon(clock.start())
+    await reset(dut.RST)
+
+    hours = dut.binary_clock.hours
+    hours_init = dut.binary_clock.hours_init
+    rst = dut.binary_clock.rst
+
+    # test each hour
+    for i in range(0,24):
+        hours_init.value = i
+        await ClockCycles(dut.CLK, 1)
+
+        rst.value = 1
+        await ClockCycles(dut.CLK, 1)
+        rst.value = 0
+        await ClockCycles(dut.CLK, 1)
+
+        assert hours.value == i
+        await ClockCycles(dut.CLK, 1)
