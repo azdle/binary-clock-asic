@@ -109,7 +109,7 @@ module clock(
   assign sec_source = pps_latch ? pps : s_tick;
 
   overflow_counter #(.bits(5))
-    h_cnt(.rst(rst), .clk(h_tick), .cmp(5'd24), .cnt(hours), .tick(d_tick), .init(0));
+    h_cnt(.rst(rst), .clk(h_tick), .cmp(5'd24), .cnt(hours), .tick(d_tick), .init(hours_init));
   overflow_counter #(.bits(6))
     m_cnt(.rst(rst), .clk(m_tick), .cmp(6'd60), .cnt(minutes), .tick(h_tick), .init(0));
   overflow_counter #(.bits(6))
