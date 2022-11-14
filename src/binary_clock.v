@@ -99,6 +99,7 @@ module clock(
 
   reg pps_latch;
   wire sec_source;
+  wire hclk;
 
   always @ (posedge rst or posedge pps or posedge clk)
     if(rst && pps == 0)
@@ -115,7 +116,20 @@ module clock(
   overflow_counter #(.bits(6))
     s_cnt(.rst(rst), .clk, .tick(sec_source), .cmp(6'd60), .cnt(seconds), .roll(m_roll), .init(6'b0));
   overflow_counter #(.bits(7))
-    ms_cnt(.rst(rst), .clk, .tick(clk), .cmp(7'd100), .cnt(centiseconds), .roll(s_roll), .init(7'b0));
+    ms_cnt(.rst(rst), .clk, .tick(hclk), .cmp(7'd100), .cnt(centiseconds), .roll(s_roll), .init(7'b0));
+  halfclock cd(.clk, .hclk);
+endmodule
+
+module halfclock (
+  input clk,
+  output reg hclk
+);
+
+  always @(posedge clk)
+    if (hclk == 1)
+      hclk <= 0;
+    else
+      hclk <= 1;
 endmodule
 
 module counter #(parameter bits = 8) (
@@ -143,14 +157,14 @@ module overflow_counter #(parameter bits = 8) (
 
   reg newtick; // tick is much less frequent than clk, only do things (other than reset) once for each tick
 
-  always @(posedge clk)
+  always @(posedge clk or posedge tick)
     if (rst) begin
       cnt <= init;
       roll <= 1;
-      newtick <= 1;
+      newtick <= 0;
     end else if (tick == 0) begin
       newtick <= 1;
-    end else if (tick && newtick) begin
+    end else if (tick == 1 && newtick == 1) begin
       newtick <= 0;
       // wrap to zero instead of reaching cmp
       if(cnt == cmp-1) begin

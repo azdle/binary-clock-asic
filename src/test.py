@@ -23,15 +23,16 @@ async def second_counter_counts_seconds(dut):
     dut.PPS.value = 0;
     dut.HOURS_INIT.value = 0;
 
-    clock = Clock(dut.CLK, 10, units="ms")
+    clock = Clock(dut.CLK, 5, units="ms")
     cocotb.start_soon(clock.start())
     await reset(dut)
 
     # TODO: increase range, was 1001
     for i in range(0,100):
         await ClockCycles(dut.CLK, 1)
+        print(i, dut.binary_clock.seconds.value.integer)
         assert dut.binary_clock.seconds.value.integer  == i % 60
-        await ClockCycles(dut.CLK, 99)
+        await ClockCycles(dut.CLK, 199)
         assert dut.binary_clock.seconds.value.integer  == i % 60
 
 @cocotb.test()
@@ -41,7 +42,7 @@ async def verify_multiplexing_output(dut):
     dut.PPS.value = 0;
     dut.HOURS_INIT.value = 0;
 
-    clock = Clock(dut.CLK, 10, units="ms")
+    clock = Clock(dut.CLK, 5, units="ms")
     cocotb.start_soon(clock.start())
     await reset(dut)
 
@@ -100,7 +101,7 @@ async def high_pps_takes_over_seconds(dut):
     dut.PPS.value = 0;
     dut.HOURS_INIT.value = 0;
 
-    clock = Clock(dut.CLK, 10, units="ms")
+    clock = Clock(dut.CLK, 5, units="ms")
     cocotb.start_soon(clock.start())
     await reset(dut)
 
@@ -136,7 +137,7 @@ async def hours_initable(dut):
     dut.PPS.value = 0;
     dut.HOURS_INIT.value = 0;
 
-    clock = Clock(dut.CLK, 10, units="ms")
+    clock = Clock(dut.CLK, 5, units="ms")
     cocotb.start_soon(clock.start())
     await reset(dut)
 

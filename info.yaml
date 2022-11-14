@@ -23,7 +23,7 @@ documentation:
   external_hw:  ""
   language:     "verilog"
   doc_link:     "https://github.com/azdle/binary-clock-asic"
-  clock_hz:     100
+  clock_hz:     200
   picture:      "" #TODO
   inputs:
     - clock
