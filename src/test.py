@@ -7,6 +7,7 @@ async def reset(dut):
     dut.RST.value = 1
     await ClockCycles(dut.CLK, 1)
     dut.RST.value = 0
+    await ClockCycles(dut.CLK, 1)
     dut._log.debug("Reset complete")
 
 # Create an indexable list of bits from a binstr
@@ -27,12 +28,11 @@ async def second_counter_counts_seconds(dut):
     cocotb.start_soon(clock.start())
     await reset(dut)
 
-    # TODO: increase range, was 1001
     for i in range(0,100):
-        await ClockCycles(dut.CLK, 1)
-        print(i, dut.binary_clock.seconds.value.integer)
+        await ClockCycles(dut.CLK, 2)
+        #print(dut.binary_clock.seconds.value.integer, i)
         assert dut.binary_clock.seconds.value.integer  == i % 60
-        await ClockCycles(dut.CLK, 199)
+        await ClockCycles(dut.CLK, 198)
         assert dut.binary_clock.seconds.value.integer  == i % 60
 
 @cocotb.test()
