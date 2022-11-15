@@ -101,14 +101,8 @@ module clock(
   wire sec_source;
   wire hclk;
 
-  always @ (posedge clk)
-    if(rst && pps == 0)
-      pps_latch <= 0;
-    else if(pps_latch == 0 && pps)
-      pps_latch <= 1;
-
   always @*
-    if (~rst)
+    if (rst)
       pps_latch = pps;
     else if (pps)
       pps_latch = 1;
