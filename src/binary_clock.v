@@ -8,8 +8,8 @@ module azdle_binary_clock(
   wire [4:0] hours_init; // value for hours to load when coming out of reset
   wire [7:0] opins;
 
-  assign rst = io_in[0];
-  assign clk = io_in[1];
+  assign clk = io_in[0];
+  assign rst = io_in[1];
   assign pps = io_in[2];
   assign hours_init = io_in[7:3];
   assign io_out = opins;

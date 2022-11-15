@@ -15,7 +15,7 @@ module tb (
         #1;
     end
 
-    wire [7:0] in = {HOURS_INIT, PPS, CLK, RST};
+    wire [7:0] in = {HOURS_INIT, PPS, RST, CLK};
 
     azdle_binary_clock binary_clock (
         .io_out(out),
