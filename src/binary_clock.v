@@ -25,17 +25,17 @@ module azdle_binary_clock(
   wire s_roll; // rolls once per second
   wire [6:0] centiseconds;
 
-  wire [15:0] pixels;
+  wire [11:0] pixels;
 
-  wire [7:0] disp_pins;
+  wire [6:0] disp_pins;
 
   clock c(.rst, .clk, .pps, .hours_init,
 	  .d_roll, .h_roll, .m_roll, .s_roll,
                    .hours, .minutes, .seconds, .centiseconds);
   display disp(.rst, .clk, .pins(disp_pins), .pixels);
 
-  assign pixels = { 5'b0, hours, minutes };
-  assign opins = rst ? 0 : {disp_pins};
+  assign pixels = { hours, minutes, seconds[0] };
+  assign opins = rst ? 0 : {1'b0, disp_pins};
 endmodule
 
 // pass (convenience to match `i` (invert))
@@ -55,31 +55,36 @@ endfunction
 module display (
   input rst,
   input clk,
-  input [15:0] pixels, // [row][column]
-  output [7:0] pins
+  input [11:0] pixels, // [row][column]
+  output [6:0] pins
 );
 
-  wire [1:0] row;
   wire [1:0] col;
-  wire [3:0] rows;
+  wire [2:0] rows;
   wire [3:0] cols;
 
-  counter #(.bits(2)) state_cycle(.rst(rst), .clk(clk), .cnt(row));
+  rotor state_cycle(.rst(rst), .clk(clk), .val(rows));
 
   assign pins = { rows, cols };
 
-  assign rows = rst ? 0 :
-    row == 0 ? { 1'b1, 1'b1, 1'b1, 1'b0 } :
-    row == 1 ? { 1'b1, 1'b1, 1'b0, 1'b1 } :
-    row == 2 ? { 1'b1, 1'b0, 1'b1, 1'b1 } :
-    row == 3 ? { 1'b0, 1'b1, 1'b1, 1'b1 } :
-    0;
   assign cols = rst ? 0 :
-    row == 0 ? { p(pixels[0+3]), p(pixels[0+2]), p(pixels[0+1]), p(pixels[0+0]) } :
-    row == 1 ? { p(pixels[4+3]), p(pixels[4+2]), p(pixels[4+1]), p(pixels[4+0]) } :
-    row == 2 ? { p(pixels[8+3]), p(pixels[8+2]), p(pixels[8+1]), p(pixels[8+0]) } :
-    row == 3 ? { p(pixels[12+3]), p(pixels[12+2]), p(pixels[12+1]), p(pixels[12+0]) } :
+    rows == 3'b110 ? { p(pixels[0+3]), p(pixels[0+2]), p(pixels[0+1]), p(pixels[0+0]) } :
+    rows == 3'b101 ? { p(pixels[4+3]), p(pixels[4+2]), p(pixels[4+1]), p(pixels[4+0]) } :
+    rows == 3'b011 ? { p(pixels[8+3]), p(pixels[8+2]), p(pixels[8+1]), p(pixels[8+0]) } :
     0;
+endmodule
+
+module rotor #(parameter bits = 3, parameter pattern = 6) (
+  input rst,
+  input clk,
+  output reg [bits-1:0] val
+);
+
+  always @(posedge clk)
+    if (rst)
+      val <= pattern;
+    else
+      val <= { val[bits-2:0], val[bits-1] };
 endmodule
 
 module clock(

@@ -63,19 +63,19 @@ async def verify_multiplexing_output(dut):
 
         plex = [[0,0,0,0],
                 [0,0,0,0],
-                [0,0,0,0],
                 [0,0,0,0]]
 
-        for _ in range(0,4):
+        for _ in range(0,3):
+            #print(dut.out.value.binstr)
             pins = bit_list(dut.out.value.binstr)
             col = pins[0:4]
-            row = pins[4:8]
+            row = pins[4:7]
 
             #print("pins", pins, col, row)
 
-            assert sum(row) == 3
+            assert sum(row) == 2
 
-            row = row[0] == 0 and 0 or row[1] == 0 and 1 or row[2] == 0 and 2 or row[3] == 0 and 3
+            row = row[0] == 0 and 0 or row[1] == 0 and 1 or row[2] == 0 and 2
 
             for ci, cv in enumerate(col):
                 #print(ci, cv)
@@ -83,7 +83,7 @@ async def verify_multiplexing_output(dut):
 
             await ClockCycles(dut.CLK, 1)
 
-        #print("pat:", ("_" * 5) + ("h" * 5) + ("m" * 6))
+        #print("pat:", ("h" * 5) + ("m" * 6) + "s")
         #print("inp:", dut.binary_clock.pixels.value.binstr)
 
         flat_plex = [str(pixel) for row in plex for pixel in row]
